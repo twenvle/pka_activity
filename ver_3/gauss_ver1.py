@@ -41,7 +41,7 @@ for train_index, test_index in loo.split(X_scaled):
     model.fit(X_train, y_train)
     y_pred.append(model.predict(X_test)[0])
     y_true.append(y_test.values[0])
-mae = np.sqrt(mean_absolute_error(y_true, y_pred))
+mae = np.mean_absolute_error(y_true, y_pred)
 r2 = r2_score(y_true, y_pred)
 
 model.fit(X_scaled, y)

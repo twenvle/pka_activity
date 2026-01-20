@@ -39,11 +39,18 @@ for train_index, test_index in loo.split(X_scaled):
     X_train, X_test = X_scaled[train_index], X_scaled[test_index]
     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
     model.fit(X_train, y_train)
+
     y_pred.append(model.predict(X_test)[0])
     y_true.append(y_test.values[0])
-mae = np.sqrt(mean_absolute_error(y_true, y_pred))
+
+mae = mean_absolute_error(y_true, y_pred)
 r2 = r2_score(y_true, y_pred)
 
 model.fit(X_scaled, y)
 
-joblib.dump(model, "ver_3/gauss_ver1.pkl")
+content = {"model": model, "scaler": scaler}
+
+joblib.dump(
+    content,
+    r"C:\Users\kkyom\OneDrive\デスクトップ\pka_activity\ver_4\out\pklfile\gauss_ver1.pkl",
+)
