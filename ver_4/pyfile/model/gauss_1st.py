@@ -8,7 +8,7 @@ from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import joblib
 
 df = pd.read_csv(
-    r"C:\Users\kkyom\OneDrive\デスクトップ\pka_activity\ver_3\out\save\value.csv"
+    r"C:\Users\kkyom\OneDrive\デスクトップ\pka_activity\ver_4\out\csvfile\model\samples_value.csv"
 )
 
 df = df.dropna(how="any").reset_index(drop=True)
@@ -49,6 +49,9 @@ r2 = r2_score(y_true, y_pred)
 model.fit(X_scaled, y)
 
 content = {"model": model, "scaler": scaler}
+
+print(r2)
+print(mae)
 
 joblib.dump(
     content,

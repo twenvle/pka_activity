@@ -18,7 +18,9 @@ warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 names = [["basis1", "basis2"], ["basis_ion1", "basis_ion2"]]
 
 df0 = pd.read_csv(
-    f"../sample/basis_data/basis.txt", sep="\\s+", names=["atom", "x", "y", "z"]
+    rf"C:\Users\kkyom\OneDrive\デスクトップ\pka_activity\sample\basis_data\basis.txt",
+    sep="\\s+",
+    names=["atom", "x", "y", "z"],
 )
 
 df0 = df0[["x", "y", "z"]].to_numpy()
@@ -76,9 +78,16 @@ def samples_data():
         "3501-3600",
         "3601-3700",
     ]
-    df = pd.read_excel("../sample/data/Substance_1-100.xlsx", header=4)
+
+    df = pd.read_excel(
+        r"C:\Users\kkyom\OneDrive\デスクトップ\pka_activity\sample\data\Substance_1-100.xlsx",
+        header=4,
+    )
     for path in paths:
-        df1 = pd.read_excel(f"../sample/data/Substance_{path}.xlsx", header=4)
+        df1 = pd.read_excel(
+            rf"C:\Users\kkyom\OneDrive\デスクトップ\pka_activity\sample\data\Substance_{path}.xlsx",
+            header=4,
+        )
         df = pd.concat([df, df1], ignore_index=True)
     df = df.dropna(subset=[df.columns[2]]).reset_index(drop=True)
     return pd.concat(
@@ -404,14 +413,16 @@ def generate_coord(df, divide=100):
 
 
 def save_data(df, name):
-    os.makedirs("out/save", exist_ok=True)
     df["h1"] = None
     df["h2"] = None
     for i in range(len(df)):
         df.loc[i, "h1"] = df.loc[i, "cooh"][1][4]
         df.loc[i, "h2"] = df.loc[i, "cooh"][0][4]
-    df = pd.concat([df["cas"], df["smiles"], df["h1"], df["h2"]], axis=1)
-    df.to_csv(f"out/save/{name}.csv", index=False)
+    df = pd.concat([df["cas"], df["smiles"], df["h1"], df["h2"], df["yield"]], axis=1)
+    df.to_csv(
+        rf"C:\Users\kkyom\OneDrive\デスクトップ\pka_activity\ver_4\out\csvfile\known\{name}.csv",
+        index=False,
+    )
 
 
 atom = {
@@ -499,3 +510,19 @@ def make_ion_file(df, path):
             all_sh += f"qsub -g tga-ynabae sub_{cas}_ion.sh"
     with open(f"{path_out}_ion/all.sh", "w", newline="\n") as f:
         f.write(all_sh)
+
+
+def add_data(df, name):
+    route = Path("../../out/csvfile")
+    filepath = route.glob(f"**/{name}.csv")
+    df_base = pd.read_csv(filepath)
+    df = pd.concat([df_base, df], axis=0, ignore_index=True)
+    df.to_csv(f"{filepath}", index=False)
+
+
+def save_known_data(read_name, save_name):
+    df = pd.read_excel(
+        rf"C:\Users\kkyom\OneDrive\デスクトップ\pka_activity\ver_4\data\{read_name}.xlsx"
+    )
+    df = detect_phthalic_acid(df)
+    save_data(df, save_name)
