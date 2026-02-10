@@ -9,6 +9,8 @@ import os
 import cclib
 import glob
 from pathlib import Path
+from . import dft_calc as dc
+from . import rdkit_calc as rc
 
 
 RDLogger.DisableLog("rdApp.*")
@@ -520,9 +522,17 @@ def add_data(df, name):
     df.to_csv(f"{filepath}", index=False)
 
 
-def save_known_data(read_name, save_name):
+def save_known_data(read_name, save_name, path="known"):
     df = pd.read_excel(
         rf"C:\Users\kkyom\OneDrive\デスクトップ\pka_activity\ver_4\data\{read_name}.xlsx"
     )
-    df = detect_phthalic_acid(df)
-    save_data(df, save_name)
+    df = detect_phthalic_acid(df, benzene=True)
+
+    df = dc.get_data(df, path)
+    df = rc.sub_idx(df)
+    df = rc.get_descriptors(df)
+    df.drop(columns=["化合物名", "cooh", "benzene"], inplace=True)
+    df.to_csv(
+        rf"C:\Users\kkyom\OneDrive\デスクトップ\pka_activity\ver_4\out\csvfile\known\{save_name}.csv",
+        index=False,
+    )

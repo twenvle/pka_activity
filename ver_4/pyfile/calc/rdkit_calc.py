@@ -1,11 +1,11 @@
 import pandas as pd
 from rdkit import Chem
 from rdkit.Chem import AllChem
-import ver_4.pyfile.calc.phthalicacid as pa
+from rdkit.Chem import Descriptors, Lipinski
+from . import phthalicacid as pa
 
 
 def sub_idx(df):
-    df = pa.detect_phthalic_acid(df, benzene=True)
     df["3and6"] = 0
     df["4and5"] = 0
     for i in range(len(df)):
@@ -40,5 +40,20 @@ def sub_idx(df):
         if df.loc[i, "4th"] < df.loc[i, "5th"]:
             df.loc[i, "4th"], df.loc[i, "5th"] = df.loc[i, "5th"], df.loc[i, "4th"]
         """
-    df.drop(columns=["cooh", "benzene"], inplace=True)
+    return df
+
+
+def get_descriptors(df):
+    for i in range(len(df)):
+        smiles = df.loc[i, "smiles"]
+        mol = Chem.MolFromSmiles(smiles)
+
+        logp = Descriptors.MolLogP(mol)
+        hbd = Lipinski.NumHDonors(mol)
+        hba = Lipinski.NumHAcceptors(mol)
+
+        df.loc[i, "logp"] = logp
+        df.loc[i, "hbd"] = hbd
+        df.loc[i, "hba"] = hba
+
     return df

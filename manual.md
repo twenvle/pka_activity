@@ -49,6 +49,7 @@ matplotlib
 ```
 ssh -Y -2 -C -X uy06578@login.t4.gsic.titech.ac.jp # SSHログイン
 bash *.sh # シェルスクリプトの実行
+qrsh -g tga-ynabae -l cpu_4=1 -l h_rt=1:00:00 # gaussviewを使うためのジョブを取得
 module load gaussian gaussview # gaussviewを使えるようにする
 gview -soft # gaussviewの起動
 qsub -g tga-ynabae *.sh # ジョブを投げる
