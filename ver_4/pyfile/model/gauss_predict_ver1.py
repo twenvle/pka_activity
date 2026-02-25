@@ -4,11 +4,11 @@ from scipy.stats import norm
 import joblib
 
 df = pd.read_csv(
-    r"C:\Users\kkyom\OneDrive\デスクトップ\pka_activity\ver_4\out\csvfile\samples_1-100_ver1.csv"
+    r"C:\Users\kkyom\OneDrive\デスクトップ\pka_activity\ver_4\out\csvfile\unknown\unknown_1-200.csv"
 )
 
 df_train = pd.read_csv(
-    r"C:\Users\kkyom\OneDrive\デスクトップ\pka_activity\ver_4\out\csvfile\samples_value.csv"
+    r"C:\Users\kkyom\OneDrive\デスクトップ\pka_activity\ver_4\out\csvfile\known\2nd_20260205.csv"
 )
 
 content = joblib.load(

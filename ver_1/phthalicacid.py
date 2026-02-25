@@ -16,10 +16,10 @@ df = []
 water = []
 for i in range(2):
     df1 = pd.read_csv(
-        f"sample/{names[i][0]}.txt", sep="\\s+", names=["atom", "x", "y", "z"]
+        f"../sample/past/{names[i][0]}.txt", sep="\\s+", names=["atom", "x", "y", "z"]
     )
     df2 = pd.read_csv(
-        f"sample/{names[i][1]}.txt", sep="\\s+", names=["atom", "x", "y", "z"]
+        f"../sample/past/{names[i][1]}.txt", sep="\\s+", names=["atom", "x", "y", "z"]
     )
 
     df1 = df1[["x", "y", "z"]].to_numpy()

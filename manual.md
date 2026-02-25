@@ -56,4 +56,5 @@ qsub -g tga-ynabae *.sh # ジョブを投げる
 qstat -u uy06578 # ジョブの確認
 qdel -u uy06578　# ジョブを全て削除
 qdel ジョブID # 指定したジョブを削除
+dos2unix *.gjf *.sh # Windowsで作成したファイルをLinux形式に変換
 ```
