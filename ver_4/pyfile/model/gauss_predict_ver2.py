@@ -4,7 +4,7 @@ from scipy.stats import norm
 import joblib
 
 
-def make_csv(train_name, pkl_name, descriptors=[]):
+def make_csv(train_name, pkl_name, descriptors=None, xi=1):
     df = pd.read_csv(
         r"C:\Users\kkyom\OneDrive\デスクトップ\pka_activity\ver_4\out\csvfile\unknown\unknown_data.csv"
     )
@@ -34,7 +34,7 @@ def make_csv(train_name, pkl_name, descriptors=[]):
     mu, sigma = model.predict(X_scaled, return_std=True)
 
     # EI = (mu - current_best - xi) * Phi(Z) + sigma * phi(Z)
-    def calculate_ei(mu, sigma, current_best, xi=0.1):
+    def calculate_ei(mu, sigma, current_best, xi=xi):
         with np.errstate(divide="warn"):
             imp = mu - current_best - xi
             Z = imp / sigma
