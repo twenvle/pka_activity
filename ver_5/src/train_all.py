@@ -6,8 +6,10 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+import joblib
 import numpy as np
 import pandas as pd
+from scipy.stats import norm
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel, Matern, WhiteKernel
@@ -20,6 +22,7 @@ from sklearn.linear_model import (
 )
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV, LeaveOneOut, RepeatedKFold
+from sklearn.neighbors import NearestNeighbors
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVR
@@ -58,7 +61,7 @@ METHOD = {
     "blr": BayesianRidge(),
 }
 
-PARAMETER = {
+PARAMETER = (
     "alpha",
     "kernel",
     "l1_ratio",
@@ -76,7 +79,7 @@ PARAMETER = {
     "x_weights_",
     "x_loadings_",
     "y_loadings_",
-}
+)
 
 
 logger = logging.getLogger(__name__)
@@ -138,7 +141,7 @@ def hyper_parameter(length: int, method: str) -> dict:
             "elasticnet__l1_ratio": l1_ratio,
         }
     elif method == "pls":
-        n_components = [1, 2, 3, 4, 5, 6, 7]
+        n_components = range(1, min(length, 7) + 1)
         param_grid = {"pls__n_components": n_components}
     elif method == "svr":
         kernels = ["rbf", "poly"]
@@ -151,6 +154,8 @@ def hyper_parameter(length: int, method: str) -> dict:
             "svr__epsilon": epsilon,
             "svr__gamma": gamma,
         }
+    else:
+        raise ValueError(f"Unknown method: {method}")
     return param_grid
 
 
@@ -259,6 +264,7 @@ def train(
 ):
     setup_logger(method)
     start_time = time.time()
+    df = df.dropna(how="any").reset_index(drop=True)
     X = df[descriptors]
     if target not in TARGET or method not in METHOD.keys():
         raise ValueError(f"{target} or {method} is not exist.")
@@ -278,15 +284,9 @@ def train(
         y_test = float(y.iloc[test_idx].iloc[0])
 
         corr_abs = X_train_all.corr().abs()
-        if method in {"gpr", "ols", "svr", "blr"}:
-            combinations = generate_combinations(descriptors, corr_abs)
-            logger.info(f"length of combinations: {len(combinations)}")
-            best = best_combination(X_train_all, y_train_all, combinations, method)
-
-        elif method in {"ridge", "lasso", "elasticnet", "pls"}:
-            best = best_combination(
-                X_train_all, y_train_all, [tuple(descriptors)], method
-            )
+        combinations = generate_combinations(descriptors, corr_abs)
+        logger.info(f"length of combinations: {len(combinations)}")
+        best = best_combination(X_train_all, y_train_all, combinations, method)
 
         combi = list(best["combi"])
         estimator = best["best_estimator"]
@@ -322,25 +322,25 @@ def train(
     logger.info(f"rmse_loo: {metrics['rmse_loo']}")
     logger.info(f"r2_loo: {metrics['r2_loo']}")
 
-    if method in {"gpr", "ols", "svr", "blr"}:
-        final_corr_abs = X.corr().abs()
-        final_combinations = generate_combinations(descriptors, final_corr_abs)
-    elif method in {"ridge", "lasso", "elasticnet", "pls"}:
-        final_combinations = [tuple[descriptors]]
+    final_corr_abs = X.corr().abs()
+    final_combinations = generate_combinations(descriptors, final_corr_abs)
     final_best = best_combination(X, y, final_combinations, method)
     logger.info(final_best)
 
     pred_path = (
         Path(__file__).resolve().parent / f"out/{today}_{method}_predictions.csv"
     )
-    summary_path = (
+    summary_path_json = (
         Path(__file__).resolve().parent / f"out/{today}_{method}_summary.json"
+    )
+    summary_path_joblib = (
+        Path(__file__).resolve().parent / f"out/{today}_{method}_final_model.joblib"
     )
 
     pred_path.parent.mkdir(parents=True, exist_ok=True)
     pred_df.to_csv(pred_path, index=False)
 
-    final_best.pop("best_estimator", None)
+    final_estimator = final_best.pop("best_estimator", None)
 
     summary = {
         "n_rows_after_dropna": int(len(df)),
@@ -352,5 +352,7 @@ def train(
         "elapsed_seconds": round(time.time() - start_time, 3),
     }
 
-    with summary_path.open("w", encoding="utf-8") as f:
+    with summary_path_json.open("w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)
+
+    joblib.dump(final_estimator, summary_path_joblib)
